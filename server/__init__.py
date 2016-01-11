@@ -15,32 +15,42 @@ db.isolation_level = None
 cursor = db.cursor()
 
 
-@route('/')
-def tables():
+def get_tables():
+    tables_dict = dict()
+
     # cursor.execute("SELECT * FROM sqlite_master WHERE type != 'index';")
     cursor.execute("SELECT * FROM sqlite_master WHERE type = 'table';")
     # cursor.execute("SELECT * FROM sqlite_master WHERE type != 'index';")
     data = dict()
     for row in [c for c in cursor if c['name'] != 'sqlite_sequence']:
-        data[row['name']] = dict(
+        key = row['name'].replace(' ', '_')
+        tables_dict[key] = dict(
                 name=row['name'],
                 # ddl=row['sql'],
                 type=row['type'],
-                schema='http://localhost:8080/schema/' + row['name'],
-                data='http://localhost:8080/data/' + row['name'])
+                schema='http://localhost:8080/schema/%s' % key,
+                data='http://localhost:8080/data/%s' % key)
 
     # data = [_[0] for _ in cursor.fetchall() if _[0] != 'sqlite_sequence']
-    return data
+    return tables_dict
+
+
+@route('/')
+def tables():
+    return get_tables()
 
 
 def table_columns(table):
+    table = get_tables()[table]['name']
     cursor.execute("PRAGMA table_info('{0}');".format(table))
     data = [c['name'] for c in cursor]
     return data
 
 
-@route('/schema/<table>')
-def table_info(table):
+@route('/schema/<_table>')
+def table_info(_table):
+    table = get_tables()[_table]['name']
+
     cursor.execute("PRAGMA table_info('{0}');".format(table))
     schema_info = [dict(
             name=_['name'],
@@ -52,9 +62,11 @@ def table_info(table):
     return dict(info=schema_info)
 
 
-@route('/data/<table>/<_id>')
-def getbyid(table, _id):
-    columns = table_columns(table)
+@route('/data/<_table>/<_id>')
+def getbyid(_table, _id):
+    table = get_tables()[_table]['name']
+
+    columns = table_columns(_table)
     db.row_factory = sqlite3.Row
 
     for record in cursor.execute(
@@ -65,15 +77,16 @@ def getbyid(table, _id):
     return tmp
 
 
-@route('/data/<table>')
-def table_data(table):
-    columns = table_columns(table)
+@route('/data/<_table>')
+def table_data(_table):
+    table = get_tables()[_table]['name']
+    columns = table_columns(_table)
     db.row_factory = sqlite3.Row
 
     data = list()
     for record in cursor.execute('SELECT * FROM "{0}";'.format(table)):
         tmp = {k: record[i] for i, k in enumerate(columns)}
-        tmp['Uri'] = 'http://localhost:8080/data/{0}/{1}'.format(table,
+        tmp['Uri'] = 'http://localhost:8080/data/{0}/{1}'.format(_table,
                                                                  record[0])
         data.append(tmp)
     return dict(data=data)
@@ -88,5 +101,7 @@ def employees():
 
 
 if __name__ == '__main__':
-    # bottle.run(host='localhost', port=8080, debug=True, reloader=True)
-    employees()
+    get_tables()
+
+    bottle.run(host='localhost', port=8080, debug=True, reloader=True)
+    # employees()
