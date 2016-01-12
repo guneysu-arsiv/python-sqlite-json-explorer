@@ -3,31 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <title>Maestro :: DTVH</title>
+
+    <!--<link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=Quicksand" /> -->
+
+    <link href='https://fonts.googleapis.com/css?family=Droid+Sans+Mono'
+          rel='stylesheet' type='text/css'>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
     <script src="lib/jquery.serializeToJSON.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.7.0/underscore-min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/backbone.js/1.1.2/backbone-min.js"></script>
-    <!--<script src="js/app.js"></script>-->
     <script src="lib/pretty-json.js"></script>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/json.css">
     <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
     <script>
-
         $(function () {
             $("#fire").click(function () {
+                jQuery("#result").removeClass("flash");
+
                 var url = $("#url").val();
                 console.log(url);
 
                 $.getJSON(url, function (data) {
                     var node = new PrettyJSON.view.Node({
                         el: $('#result'),
-                        data: data
+                        data: data,
                     });
+                    node.expandAll();
+
+                    $("#result").fadeIn(100).fadeOut(100).fadeIn(100).fadeOut(100).fadeIn(100);
+                    jQuery("#result").addClass("flash");
                 });
             });
 
-
+            $("#fire").trigger("click");
         });
     </script>
 </head>
@@ -42,21 +51,20 @@
             <label for="url" class="control-label">Adres</label>
 
             <input id="url" class="form-control col-sm-10" type="url"
-                   value="http://localhost:8080/tables"
+                   value="http://localhost:8080/fk/Order_Details"
                    placeholder="Adres">
 
         </div>
 
         <div class="row">
             <div class="col-sm-offset-0 col-sm-10">
-                <button id="fire" type="submit" class="btn btn-primary">
+                <button id="fire" type="button" class="btn btn-primary">
                     Submit
                 </button>
             </div>
         </div>
 
         <div class="row">
-            <!--<textarea id="input" rows="12"></textarea>-->
             <div id="result" class="json">
             </div>
         </div>

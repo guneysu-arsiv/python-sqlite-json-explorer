@@ -33,22 +33,37 @@ def get_tables():
                 # ddl=row['sql'],
                 type=row['type'],
                 schema='http://localhost:8080/schema/%s' % key,
+                foreign_keys='http://localhost:8080/fk/%s' % key,
                 data='http://localhost:8080/data/%s' % key)
 
     # data = [_[0] for _ in cursor.fetchall() if _[0] != 'sqlite_sequence']
     return tables_dict
 
 
-@app.route('/tables')
+def table_columns(_table):
+    table = get_tables()[_table]['name']
+    cursor.execute("PRAGMA table_info('{0}');".format(table))
+    data = [c['name'] for c in cursor]
+    return data
+
+
+@app.route('/')
 def tables():
     return get_tables()
 
 
-def table_columns(table):
-    table = get_tables()[table]['name']
-    cursor.execute("PRAGMA table_info('{0}');".format(table))
-    data = [c['name'] for c in cursor]
-    return data
+@app.route('/fk/<_table>')
+def fk(_table):
+    table = get_tables()[_table]['name']
+    keys = ["seq", "table", "from", "to", "on_update", "on_delete", "match"]
+
+    sql = "PRAGMA FOREIGN_KEY_LIST('{0}');".format(table)
+    cursor.execute(sql)
+    data = []
+    for c in cursor:
+        data.append({k: c[k] for k in keys})
+
+    return dict(data=data)
 
 
 @app.route('/schema/<_table>')
@@ -97,6 +112,11 @@ def table_data(_table):
 
 
 def employees():
+    """
+    :return:
+     FIXME Can not handle binary data
+    """
+    raise NotImplemented()
     import marshal
     cursor.execute('SELECT * FROM Employees LIMIT 1 OFFSET 1;')
     for r in cursor:
@@ -118,7 +138,7 @@ def enable_cors():
 
 
 if __name__ == '__main__':
-    get_tables()
+    # get_tables()
 
     bottle.run(app, host='localhost', port=8080, debug=True, reloader=True)
     # employees()
