@@ -43,7 +43,7 @@ def get_tables():
 def table_columns(_table):
     table = get_tables()[_table]['name']
     cursor.execute("PRAGMA table_info('{0}');".format(table))
-    data = [c['name'] for c in cursor]
+    data = [(c['name'], c['type']) for c in cursor]
     return data
 
 
@@ -52,8 +52,7 @@ def tables():
     return get_tables()
 
 
-@app.route('/fk/<_table>')
-def fk(_table):
+def get_fk(_table):
     table = get_tables()[_table]['name']
     keys = ["seq", "table", "from", "to", "on_update", "on_delete", "match"]
 
@@ -64,6 +63,11 @@ def fk(_table):
         data.append({k: c[k] for k in keys})
 
     return dict(data=data)
+
+
+@app.route('/fk/<_table>')
+def fk(_table):
+    return get_fk(_table)
 
 
 @app.route('/schema/<_table>')
@@ -81,19 +85,39 @@ def table_info(_table):
     return dict(info=schema_info)
 
 
-@app.route('/data/<_table>/<_id>')
-def getbyid(_table, _id):
+def getby_id(_table, _id):
     table = get_tables()[_table]['name']
 
     columns = table_columns(_table)
     db.row_factory = sqlite3.Row
 
-    for record in cursor.execute(
-            'SELECT * FROM "{0}" WHERE {1} = ?;'.format(table, columns[0]),
-            (_id,)):
-        tmp = {k: record[i] for i, k in enumerate(columns)}
+    data = dict()
 
-    return tmp
+    for record in cursor.execute(
+            'SELECT * FROM "{0}" WHERE {1} = ?;'.format(table, columns[0][0]),
+            (_id,)):
+
+        data = dict()
+        col_types = [c[0] for c in columns if not c[1] == u'BLOB']
+        for i, k in enumerate(col_types):
+            data[k] = record[str(k)]
+
+            # continue
+            # data = {k: record[i] for i, k in
+            #         enumerate([c[0] for c in columns if not c[1] == u'BLOB'])}
+    return data
+
+
+@app.route('/data/<_table>/<_id>')
+def getbyid(_table, _id):
+    data = getby_id(_table, _id)
+
+    foreign_key = get_fk(_table)
+    for fk in foreign_key['data'][:1]:
+        subdoc = getby_id(fk['table'].replace('_', ' '), data[fk['to']])
+        data[fk['from']] = subdoc
+
+    return data
 
 
 @app.route('/data/<_table>')
@@ -103,7 +127,7 @@ def table_data(_table):
     db.row_factory = sqlite3.Row
 
     data = list()
-    for record in cursor.execute('SELECT * FROM "{0}";'.format(table)):
+    for record in cursor.execute('SELECT * FROM "{0}" LIMIT 10;'.format(table)):
         tmp = {k: record[i] for i, k in enumerate(columns)}
         tmp['Uri'] = 'http://localhost:8080/data/{0}/{1}'.format(_table,
                                                                  record[0])
