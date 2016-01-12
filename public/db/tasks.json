@@ -1,0 +1,82 @@
+{
+  "tasks": [
+    {
+      "name": "maestro.tasks.ffmpeg.c_ffmpeg",
+      "implemented": false,
+      "method": "POST",
+      "kwargs": []
+    },
+    {
+      "name": "maestro.tasks.ftp.c_upload_file",
+      "implemented": false,
+      "method": "POST",
+      "kwargs": []
+    },
+    {
+      "name": "maestro.tasks.http.get",
+      "implemented": true,
+      "method": "GET",
+      "kwargs": [
+        {
+          "name": "url",
+          "placeHolder": "URL",
+          "value": "https://0xff.firebaseio.com/StackOverFlow/items/0.json",
+          "title": "Adres",
+          "type": "email"
+        }
+      ]
+    },
+    {
+      "name": "maestro.tasks.http.post",
+      "implemented": true,
+      "method": "POST",
+      "kwargs": [
+        {
+          "name": "url",
+          "placeHolder": "URL",
+          "value": "https://0xff.firebaseio.com/sandbox.json",
+          "title": "Adres",
+          "type": "text"
+        },
+        {
+          "name": "data.first_name",
+          "placeHolder": "json data",
+          "value": "Ahmed",
+          "title": "Ad",
+          "type": "text"
+        },
+        {
+          "name": "data.last_name",
+          "placeHolder": "json data",
+          "value": "GUNEYSU",
+          "title": "Soyad",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "name": "maestro.tasks.sftp.tasks.c_upload_file",
+      "implemented": false,
+      "method": "POST",
+      "kwargs": []
+    },
+    {
+      "name": "maestro.tasks.youtube.video.c_upload_video",
+      "implemented": false,
+      "method": "POST",
+      "kwargs": []
+    },
+    {
+      "name": "maestro.tasks.youtube.video.create_playlist",
+      "implemented": false,
+      "method": "POST",
+      "kwargs": []
+    },
+    {
+      "name": "maestro.tasks.youtube.video.get_category_list",
+      "implemented": false,
+      "method": "POST",
+      "kwargs": []
+    }
+  ]
+}

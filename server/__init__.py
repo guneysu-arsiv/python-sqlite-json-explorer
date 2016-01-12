@@ -2,9 +2,11 @@
 # coding: utf-8
 __author__ = u'Ahmed Şeref GÜNEYSU'
 
-import bottle
-from bottle import route, get
 import sqlite3
+
+import bottle
+from bottle import Bottle, response
+from bottle import route
 
 sqlite3.enable_callback_tracebacks(True)
 
@@ -13,6 +15,8 @@ db.row_factory = sqlite3.Row
 db.isolation_level = None
 
 cursor = db.cursor()
+
+app = Bottle()
 
 
 def get_tables():
@@ -35,7 +39,7 @@ def get_tables():
     return tables_dict
 
 
-@route('/')
+@app.route('/tables')
 def tables():
     return get_tables()
 
@@ -47,7 +51,7 @@ def table_columns(table):
     return data
 
 
-@route('/schema/<_table>')
+@app.route('/schema/<_table>')
 def table_info(_table):
     table = get_tables()[_table]['name']
 
@@ -62,7 +66,7 @@ def table_info(_table):
     return dict(info=schema_info)
 
 
-@route('/data/<_table>/<_id>')
+@app.route('/data/<_table>/<_id>')
 def getbyid(_table, _id):
     table = get_tables()[_table]['name']
 
@@ -77,7 +81,7 @@ def getbyid(_table, _id):
     return tmp
 
 
-@route('/data/<_table>')
+@app.route('/data/<_table>')
 def table_data(_table):
     table = get_tables()[_table]['name']
     columns = table_columns(_table)
@@ -100,8 +104,21 @@ def employees():
         print(a)
 
 
+@app.hook('after_request')
+def enable_cors():
+    """
+    You need to add some headers to each request.
+    Don't use the wildcard '*' for Access-Control-Allow-Origin in production.
+    """
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers[
+        'Access-Control-Allow-Methods'] = 'PUT, GET, POST, DELETE, OPTIONS'
+    response.headers[
+        'Access-Control-Allow-Headers'] = 'Origin, Accept, Content-Type, X-Requested-With, X-CSRF-Token'
+
+
 if __name__ == '__main__':
     get_tables()
 
-    bottle.run(host='localhost', port=8080, debug=True, reloader=True)
+    bottle.run(app, host='localhost', port=8080, debug=True, reloader=True)
     # employees()
