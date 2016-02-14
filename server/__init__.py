@@ -10,7 +10,7 @@ from bottle import route
 
 sqlite3.enable_callback_tracebacks(True)
 
-db = sqlite3.connect("../db.sqlite3")
+db = sqlite3.connect("../db.sqlite3",detect_types=sqlite3.PARSE_DECLTYPES)
 db.row_factory = sqlite3.Row
 db.isolation_level = None
 
@@ -102,9 +102,9 @@ def getby_id(_table, _id):
             # data[k] = record[str(k)]
             data[k] = record[str(k)]
 
-        # continue
-        # data = {k: record[i] for i, k in
-        #         enumerate([c[0] for c in columns if not c[1] == u'BLOB'])}
+            # continue
+            # data = {k: record[i] for i, k in
+            #         enumerate([c[0] for c in columns if not c[1] == u'BLOB'])}
     return data
 
 
@@ -118,6 +118,15 @@ def getbyid(_table, _id):
         data[fk['from']] = subdoc
 
     return data
+
+
+@app.route('/foo')
+def foo():
+    data = []
+    for e in cursor.execute('SELECT * FROM Categories LIMIT 10;'):
+        data.append([repr(e[3]), unicode(e[3])])
+    return dict(data=data)
+
 
 
 @app.route('/data/<_table>')
